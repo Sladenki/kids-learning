@@ -2,9 +2,16 @@ import { useEffect } from 'react'
 import questions from './data/questions.json'
 import QuestionCard from './components/QuestionCard'
 import Progress from './components/Progress'
-import { useQuestionTimer } from './hooks/useQuestionTimer'
+import { useQuestionTimer, QUIZ_INTERVAL_MS } from './hooks/useQuestionTimer'
 import LockTask from './plugins/LockTask'
 import './App.css'
+
+async function checkPendingQuiz(startNewQuiz) {
+  const result = await LockTask.getPendingQuizDue()
+  if (result.due) {
+    startNewQuiz()
+  }
+}
 
 export default function App() {
   const {
@@ -14,12 +21,41 @@ export default function App() {
     currentQuestion,
     timeUntilNextFormatted,
     handleCorrectAnswer,
+    startNewQuiz,
   } = useQuestionTimer(questions)
 
   useEffect(() => {
+    let listener
+
+    const setup = async () => {
+      listener = await LockTask.addListener('quizDue', () => {
+        startNewQuiz()
+      })
+      await checkPendingQuiz(startNewQuiz)
+    }
+
+    setup()
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        checkPendingQuiz(startNewQuiz)
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      listener?.remove()
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [startNewQuiz])
+
+  useEffect(() => {
     if (isLocked) {
+      LockTask.cancelQuiz().catch(() => {})
       LockTask.startLockTask().catch(() => {})
     } else {
+      LockTask.scheduleQuiz({ delayMs: QUIZ_INTERVAL_MS }).catch(() => {})
       LockTask.stopLockTask().catch(() => {})
     }
   }, [isLocked])

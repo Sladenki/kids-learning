@@ -5,6 +5,7 @@ import android.os.Build;
 import android.view.View;
 import android.view.WindowInsetsController;
 
+import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -59,6 +60,31 @@ public class LockTaskPlugin extends Plugin {
                 call.reject("Failed to stop lock task: " + e.getMessage());
             }
         });
+    }
+
+    @PluginMethod
+    public void scheduleQuiz(PluginCall call) {
+        long delayMs = call.getLong("delayMs", 10 * 60 * 1000L);
+        QuizAlarmScheduler.schedule(getContext(), delayMs);
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void cancelQuiz(PluginCall call) {
+        QuizAlarmScheduler.cancel(getContext());
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void getPendingQuizDue(PluginCall call) {
+        boolean due = QuizAlarmScheduler.consumeQuizDue(getContext());
+        JSObject result = new JSObject();
+        result.put("due", due);
+        call.resolve(result);
+    }
+
+    public void fireQuizDue() {
+        notifyListeners("quizDue", new JSObject());
     }
 
     private void enableFullscreen(Activity activity) {
