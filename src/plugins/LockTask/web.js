@@ -16,4 +16,6 @@ export class LockTaskWeb {
   async getPendingQuizDue() {
     return { due: false }
   }
+
+  async ensureQuizPermissions() {}
 }

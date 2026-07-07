@@ -52,6 +52,12 @@ public class MainActivity extends BridgeActivity {
         deliverQuizDueWhenReady();
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        QuizAlarmScheduler.ensureScheduled(this);
+    }
+
     private void handleQuizIntent(Intent intent) {
         if (intent == null || !intent.getBooleanExtra(EXTRA_QUIZ_DUE, false)) {
             return;

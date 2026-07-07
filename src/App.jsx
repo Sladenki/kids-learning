@@ -55,6 +55,7 @@ export default function App() {
       LockTask.cancelQuiz().catch(() => {})
       LockTask.startLockTask().catch(() => {})
     } else {
+      LockTask.ensureQuizPermissions().catch(() => {})
       LockTask.scheduleQuiz({ delayMs: QUIZ_INTERVAL_MS }).catch(() => {})
       LockTask.stopLockTask().catch(() => {})
     }
@@ -86,6 +87,9 @@ export default function App() {
             <span className="free-screen__timer-label">Следующий вопрос через</span>
             <span className="free-screen__timer-value">{timeUntilNextFormatted}</span>
           </div>
+          <p className="free-screen__note">
+            Можно закрыть приложение — через 10 минут оно откроется само
+          </p>
         </main>
       )}
     </div>
